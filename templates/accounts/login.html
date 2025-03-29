@@ -9,22 +9,18 @@
           <h4 class="card-title mb-4">Sign in</h4>
           <form method="POST">
             {% csrf_token %}
-
-          <div class="form-group">
-                 <input name="email" class="form-control" placeholder="Email" type="text">
-              </div> <!-- form-group// -->
-              <div class="form-group">
+            {% include "base/alert.html" %}  <!-- ✅ This line is missing in your login.html -->
+            <div class="form-group">
+                <input name="email" class="form-control" placeholder="Email" type="text">
+            </div> 
+            <div class="form-group">
                 <input name="password" class="form-control" placeholder="Password" type="password">
-              </div> <!-- form-group// -->
-              
-              <div class="form-group">
-                  <a href="#" class="float-right">Forgot password?</a> 
-                <label class="float-left custom-control custom-checkbox"> <input type="checkbox" class="custom-control-input" checked=""> <div class="custom-control-label"> Remember </div> </label>
-              </div> <!-- form-group form-check .// -->
-              <div class="form-group">
-                  <button type="submit" class="btn btn-primary btn-block"> Login  </button>
-              </div> <!-- form-group// -->    
-          </form>
+            </div> 
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block"> Login  </button>
+            </div> 
+        </form>
+        
           </div> <!-- card-body.// -->
         </div> <!-- card .// -->
     
