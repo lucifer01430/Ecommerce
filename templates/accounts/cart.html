@@ -5,15 +5,19 @@
 <section class="section-content padding-y">
   <div class="container">
     <div class="row">
+
+      <!-- Cart Items Section -->
       <main class="col-md-9">
-        <div class="card">
+        <form method="POST" action="{% url 'update_cart_quantities' %}">
+          {% csrf_token %}
           <table class="table table-borderless table-shopping-cart">
             <thead class="text-muted">
               <tr class="small text-uppercase">
-                <th scope="col">Product</th>
-                <th scope="col" width="120">Variant</th>
-                <th scope="col" width="120">Price</th>
-                <th scope="col" class="text-right" width="200">Action</th>
+                <th>Product</th>
+                <th width="100">Variant</th>
+                <th width="100">Quantity</th> <!-- ✅ New Column -->
+                <th width="100">Price</th>
+                <th width="100" class="text-right">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -31,50 +35,43 @@
                   </figure>
                 </td>
                 <td>
-                  <p class="small text-muted">
-                    {% if item.size_variant %}Size: {{ item.size_variant.size_name }}{% endif %}
-                    {% if item.color_variant %}<br>Color: {{ item.color_variant.color_name }}{% endif %}
-                  </p>
+                  {% if item.size_variant %}Size: {{ item.size_variant.size_name }}<br>{% endif %}
+                  {% if item.color_variant %}Color: {{ item.color_variant.color_name }}{% endif %}
                 </td>
                 <td>
-                  <div class="price-wrap">
-                    <var class="price">₹{{ item.get_product_price }}</var>
-                  </div>
+                  <input type="number" name="quantity_{{ item.uid }}" value="{{ item.quantity }}" min="1" class="form-control form-control-sm" style="width: 70px;">
+                </td>
+                <td>
+                  ₹{{ item.get_product_price }}
                 </td>
                 <td class="text-right">
-                  <a href="{% url 'remove_cart' item.uid %}" class="btn btn-light">Remove</a>
+                  <a href="{% url 'remove_cart' item.uid %}" class="btn btn-outline-danger btn-sm">Remove</a>
                 </td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="4">Your cart is empty.</td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
-          
           <div class="card-body border-top">
-            <a href="#" class="btn btn-primary float-md-right">Make Purchase <i class="fa fa-chevron-right"></i></a>
-            <a href="/" class="btn btn-light"><i class="fa fa-chevron-left"></i> Continue shopping</a>
+            <button type="submit" class="btn btn-primary">Update Quantities</button>
+            <a href="/" class="btn btn-light"> <i class="fa fa-chevron-left"></i> Continue shopping</a>
           </div>
-        </div>
+        </form>
+        
 
-        <div class="alert alert-success mt-3">
-          <p class="icontext">
-            <i class="icon text-success fa fa-truck"></i> Free Delivery within 1-2 weeks
-          </p>
+        <div class="alert alert-info mt-3">
+          <p class="icontext"><i class="icon text-info fa fa-truck"></i> Free Delivery within 1-2 weeks</p>
         </div>
       </main>
 
+      <!-- Coupon + Price Summary -->
       <aside class="col-md-3">
-        <!-- Coupon Form -->
         <div class="card mb-3">
           <div class="card-body">
-            <form method="POST" action="#">
+            <form method="POST" action="">
               {% include 'base/alert.html' %}
               {% csrf_token %}
               <div class="form-group">
-                <label>Have coupon?</label>
+                <label>Have a coupon?</label>
                 <div class="input-group">
                   <input type="text" class="form-control" name="coupon" placeholder="Coupon code">
                   <span class="input-group-append">
@@ -83,16 +80,33 @@
                 </div>
               </div>
             </form>
+
             {% if cart and cart.coupon %}
-              <p class="text-success">
-                Coupon "<strong>{{ cart.coupon.coupon_code }}</strong>" applied.
-                <a href="?remove_coupon=true" class="text-danger ml-2">[Remove]</a>
-              </p>
+            <div class="border rounded shadow-sm p-3 text-center bg-light">
+              <p class="text-success font-weight-bold mb-1">Coupon Applied:</p>
+              <span class="badge badge-success px-3 py-1 mb-2">{{ cart.coupon.coupon_code|upper }}</span>
+              <p class="text-muted mb-2" style="font-size: 14px;">You saved ₹{{ cart.coupon.discount_price }} on this order.</p>
+              <a href="?remove_coupon=true" class="btn btn-outline-danger btn-sm">
+                <i class="fa fa-times mr-1"></i> Remove
+              </a>
+            </div>
+            {% elif available_coupons %}
+            <div class="mt-3">
+              <p class="font-weight-bold">Available Coupons:</p>
+              {% for c in available_coupons %}
+              <form method="POST" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="coupon" value="{{ c.coupon_code }}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm mb-2">
+                  {{ c.coupon_code }} — ₹{{ c.discount_price }} off on ₹{{ c.minimum_amount }}+
+                </button>
+              </form>
+              {% endfor %}
+            </div>
             {% endif %}
           </div>
         </div>
 
-        <!-- Price Summary -->
         <div class="card">
           <div class="card-body">
             <dl class="dlist-align">
@@ -103,9 +117,9 @@
               <dt>Discount:</dt>
               <dd class="text-right text-success">
                 {% if discount > 0 %}
-                  - ₹{{ discount }}
+                - ₹{{ discount }}
                 {% else %}
-                  ₹0
+                ₹0
                 {% endif %}
               </dd>
             </dl>
@@ -114,12 +128,13 @@
               <dd class="text-right h5"><strong>₹{{ total_price }}</strong></dd>
             </dl>
             <hr>
-            <p class="text-center mb-3">
+            <p class="text-center mb-2">
               <img src="{% static 'images/misc/payments.png' %}" height="26" alt="payments" />
             </p>
           </div>
         </div>
       </aside>
+
     </div>
   </div>
 </section>

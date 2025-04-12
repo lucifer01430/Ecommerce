@@ -48,6 +48,7 @@ class CartItems(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, related_name='cart_items', null=True, blank=True)
     color_variant = models.ForeignKey(ColorVariant, on_delete=models.SET_NULL, null=True, blank=True)
     size_variant = models.ForeignKey(SizeVariant, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1)  # ✅ NEW FIELD
 
     def __str__(self):
         return f"{self.product} in {self.cart}"
@@ -60,7 +61,7 @@ class CartItems(BaseModel):
             price.append(self.color_variant.price)
         if self.size_variant:
             price.append(self.size_variant.price)
-        return sum(price)
+        return sum(price) * self.quantity  # ✅ Total = unit_price * quantity
 
 @receiver(post_save, sender=User)
 def send_email_token(sender, instance, created, **kwargs):

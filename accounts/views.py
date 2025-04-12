@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from .models import Profile, Cart, CartItems
 from products.models import Product, SizeVariant, Coupon
 import uuid
+from django.views.decorators.http import require_POST
 
 
 # User Registration View
@@ -110,7 +111,6 @@ def remove_cart(request, cart_item_uid):
 
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-# Cart Page View (with coupon apply/remove and breakdown)
 def cart(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -118,32 +118,37 @@ def cart(request):
     cart_obj = Cart.objects.filter(user=request.user, is_paid=False).first()
     cart_items = cart_obj.cart_items.all() if cart_obj else []
 
-    # Remove coupon if remove_coupon param is set
+    # Remove coupon if requested
     if request.GET.get('remove_coupon') == 'true' and cart_obj:
         cart_obj.coupon = None
         cart_obj.save()
         messages.success(request, "Coupon removed successfully!")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-    # Apply coupon if POST method (coupon apply form)
+    # Apply coupon logic
     if request.method == 'POST':
         coupon_code = request.POST.get('coupon')
-        coupon_obj = Coupon.objects.filter(coupon_code__iexact=coupon_code).first()
+        coupon_obj = Coupon.objects.filter(coupon_code__iexact=coupon_code, is_expired=False).first()
 
         if not coupon_obj:
             messages.warning(request, "Invalid coupon code!")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         if cart_obj.coupon:
-            messages.warning(request, "Coupon already applied!")
+            messages.warning(request, "A coupon is already applied.")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        subtotal = sum([item.get_product_price() for item in cart_items])
+        if subtotal < coupon_obj.minimum_amount:
+            messages.warning(request, f"Coupon '{coupon_obj.coupon_code}' applicable on orders above ₹{coupon_obj.minimum_amount}.")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         cart_obj.coupon = coupon_obj
         cart_obj.save()
-        messages.success(request, "Coupon applied successfully!")
+        messages.success(request, f"Coupon '{coupon_obj.coupon_code}' applied successfully!")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-    # Compute subtotal (without coupon discount)
+    # Pricing calculation
     subtotal = sum([item.get_product_price() for item in cart_items])
     discount = 0
     if cart_obj and cart_obj.coupon:
@@ -151,11 +156,32 @@ def cart(request):
             discount = cart_obj.coupon.discount_price
     final_total = subtotal - discount
 
+    # All active coupons for suggestion
+    active_coupons = Coupon.objects.filter(is_expired=False)
+
     context = {
         'cart': cart_obj,
         'cart_items': cart_items,
         'subtotal': subtotal,
         'discount': discount,
         'total_price': final_total,
+        'available_coupons': active_coupons,
     }
     return render(request, 'accounts/cart.html', context)
+
+@require_POST
+def update_cart_quantities(request):
+    for key, value in request.POST.items():
+        if key.startswith('quantity_'):
+            try:
+                cart_item_id = key.split('quantity_')[1]
+                cart_item = CartItems.objects.get(uid=cart_item_id)
+                quantity = int(value)
+                if quantity > 0:
+                    cart_item.quantity = quantity
+                    cart_item.save()
+            except:
+                pass  # Handle errors silently for now
+
+    messages.success(request, "Cart quantities updated.")
+    return redirect('cart')
