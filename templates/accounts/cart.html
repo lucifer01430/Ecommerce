@@ -1,112 +1,126 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-
 {% block start %}
 <section class="section-content padding-y">
-<div class="container">
+  <div class="container">
     <div class="row">
-        <main class="col-md-9">
-            <div class="card">
-                <table class="table table-borderless table-shopping-cart">
-                    <thead class="text-muted">
-                        <tr class="small text-uppercase">
-                            <th scope="col">Product</th>
-                            <th scope="col" width="120">Variant</th>
-                            <th scope="col" width="120">Price</th>
-                            <th scope="col" class="text-right" width="200">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in cart_items %}
-                        <tr>
-                            <td>
-                                <figure class="itemside">
-                                    <div class="aside">
-                                        <img src="{{ item.product.product_images.first.image.url }}" class="img-sm">
-                                    </div>
-                                    <figcaption class="info">
-                                        <a href="#" class="title text-dark">{{ item.product.product_name }}</a>
-                                        <p class="text-muted small">
-                                            Brand: {{ item.product.brand }}
-                                        </p>
-                                    </figcaption>
-                                </figure>
-                            </td>
-                            <td>
-                                <p class="small text-muted">
-                                    {% if item.size_variant %}Size: {{ item.size_variant.size_name }}{% endif %}
-                                    {% if item.color_variant %}<br>Color: {{ item.color_variant.color_name }}{% endif %}
-                                </p>
-                            </td>
-                            <td>
-                                <div class="price-wrap">
-                                    <var class="price">₹{{ item.get_product_price }}</var>
-                                </div>
-                            </td>
-                            <td class="text-right">
-                                <a href="{% url 'remove_cart' item.uid %}" class="btn btn-light"> Remove</a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="4">Your cart is empty.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+      <main class="col-md-9">
+        <div class="card">
+          <table class="table table-borderless table-shopping-cart">
+            <thead class="text-muted">
+              <tr class="small text-uppercase">
+                <th scope="col">Product</th>
+                <th scope="col" width="120">Variant</th>
+                <th scope="col" width="120">Price</th>
+                <th scope="col" class="text-right" width="200">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in cart_items %}
+              <tr>
+                <td>
+                  <figure class="itemside">
+                    <div class="aside">
+                      <img src="{{ item.product.product_images.first.image.url }}" class="img-sm" alt="{{ item.product.product_name }}">
+                    </div>
+                    <figcaption class="info">
+                      <a href="#" class="title text-dark">{{ item.product.product_name }}</a>
+                      <p class="text-muted small">Brand: {{ item.product.brand }}</p>
+                    </figcaption>
+                  </figure>
+                </td>
+                <td>
+                  <p class="small text-muted">
+                    {% if item.size_variant %}Size: {{ item.size_variant.size_name }}{% endif %}
+                    {% if item.color_variant %}<br>Color: {{ item.color_variant.color_name }}{% endif %}
+                  </p>
+                </td>
+                <td>
+                  <div class="price-wrap">
+                    <var class="price">₹{{ item.get_product_price }}</var>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <a href="{% url 'remove_cart' item.uid %}" class="btn btn-light">Remove</a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4">Your cart is empty.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          
+          <div class="card-body border-top">
+            <a href="#" class="btn btn-primary float-md-right">Make Purchase <i class="fa fa-chevron-right"></i></a>
+            <a href="/" class="btn btn-light"><i class="fa fa-chevron-left"></i> Continue shopping</a>
+          </div>
+        </div>
 
-                <div class="card-body border-top">
-                    <a href="#" class="btn btn-primary float-md-right"> Make Purchase <i class="fa fa-chevron-right"></i> </a>
-                    <a href="/" class="btn btn-light"> <i class="fa fa-chevron-left"></i> Continue shopping </a>
+        <div class="alert alert-success mt-3">
+          <p class="icontext">
+            <i class="icon text-success fa fa-truck"></i> Free Delivery within 1-2 weeks
+          </p>
+        </div>
+      </main>
+
+      <aside class="col-md-3">
+        <!-- Coupon Form -->
+        <div class="card mb-3">
+          <div class="card-body">
+            <form method="POST" action="#">
+              {% include 'base/alert.html' %}
+              {% csrf_token %}
+              <div class="form-group">
+                <label>Have coupon?</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" name="coupon" placeholder="Coupon code">
+                  <span class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Apply</button>
+                  </span>
                 </div>
-            </div>
+              </div>
+            </form>
+            {% if cart and cart.coupon %}
+              <p class="text-success">
+                Coupon "<strong>{{ cart.coupon.coupon_code }}</strong>" applied.
+                <a href="?remove_coupon=true" class="text-danger ml-2">[Remove]</a>
+              </p>
+            {% endif %}
+          </div>
+        </div>
 
-            <div class="alert alert-success mt-3">
-                <p class="icontext"><i class="icon text-success fa fa-truck"></i> Free Delivery within 1-2 weeks</p>
-            </div>
-        </main>
-
-        <aside class="col-md-3">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <form method="POST" action="#">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label>Have coupon?</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="coupon" placeholder="Coupon code">
-                                <span class="input-group-append">
-                                    <button class="btn btn-primary">Apply</button>
-                                </span>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <dl class="dlist-align">
-                        <dt>Total price:</dt>
-                        <dd class="text-right">₹{{ total_price }}</dd>
-                    </dl>
-                    <dl class="dlist-align">
-                        <dt>Discount:</dt>
-                        <dd class="text-right">₹0</dd>  {# Update dynamically later #}
-                    </dl>
-                    <dl class="dlist-align">
-                        <dt>Total:</dt>
-                        <dd class="text-right h5"><strong>₹{{ total_price }}</strong></dd>
-                    </dl>
-                    <hr>
-                    <p class="text-center mb-3">
-                        <img src="{% static 'images/misc/payments.png' %}" height="26" />
-
-
-                    </p>
-                </div>
-            </div>
-        </aside>
+        <!-- Price Summary -->
+        <div class="card">
+          <div class="card-body">
+            <dl class="dlist-align">
+              <dt>Subtotal:</dt>
+              <dd class="text-right">₹{{ subtotal }}</dd>
+            </dl>
+            <dl class="dlist-align">
+              <dt>Discount:</dt>
+              <dd class="text-right text-success">
+                {% if discount > 0 %}
+                  - ₹{{ discount }}
+                {% else %}
+                  ₹0
+                {% endif %}
+              </dd>
+            </dl>
+            <dl class="dlist-align">
+              <dt>Total:</dt>
+              <dd class="text-right h5"><strong>₹{{ total_price }}</strong></dd>
+            </dl>
+            <hr>
+            <p class="text-center mb-3">
+              <img src="{% static 'images/misc/payments.png' %}" height="26" alt="payments" />
+            </p>
+          </div>
+        </div>
+      </aside>
     </div>
-</div>
+  </div>
 </section>
 {% endblock %}

@@ -31,15 +31,17 @@ class Cart(BaseModel):
 
     def get_cart_total(self):
         cart_items = self.cart_items.all()
-        price = []
-        for cart_item in cart_items:
-            if cart_item.product:
-                price.append(cart_item.product.price)
-            if cart_item.color_variant:
-                price.append(cart_item.color_variant.price)
-            if cart_item.size_variant:
-                price.append(cart_item.size_variant.price)
-        return sum(price)
+        total = 0
+        for item in cart_items:
+            total += item.get_product_price()
+
+        # Apply coupon discount if available
+        if self.coupon:
+            if total >= self.coupon.minimum_amount:
+                total -= self.coupon.discount_price
+
+        return total
+
 
 class CartItems(BaseModel):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_items')

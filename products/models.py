@@ -65,7 +65,7 @@ class ProductImage(BaseModel):
 
 
 class Coupon(BaseModel):
-    coupon_code = models.CharField(max_length=100, unique=True)
+    coupon_code = models.CharField(max_length=10, unique=True)
     is_expired = models.BooleanField(default=False)
-    discount_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, default=100.00)
     minimum_amount = models.DecimalField(max_digits=10, decimal_places=2, default=500.00)

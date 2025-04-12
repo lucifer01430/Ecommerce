@@ -1,13 +1,11 @@
-from django.shortcuts import get_object_or_404
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
-from .models import Profile
+from .models import Profile, Cart, CartItems
+from products.models import Product, SizeVariant, Coupon
 import uuid
-from products.models import *
-from accounts.models import Cart, CartItems
 
 
 # User Registration View
@@ -29,7 +27,6 @@ def register_page(request):
             first_name=first_name,
             last_name=last_name
         )
-        # Profile will be auto-created via post_save signal
 
         messages.success(request, "Account created successfully! Please verify your email before logging in.")
         return redirect('login')
@@ -79,21 +76,20 @@ def activate_email(request, email_token):
         return redirect('register')
 
 
-# Logout View (recommended to add)
+# Logout View
 def logout_user(request):
     logout(request)
     messages.success(request, "You have been logged out.")
     return redirect('login')
 
 
-# Add-to-cart view
+# Add-to-cart View
 def add_to_cart(request, uid):
     variant = request.GET.get('variant')
     product = get_object_or_404(Product, uid=uid)
     user = request.user
 
     cart, _ = Cart.objects.get_or_create(user=user, is_paid=False)
-
     cart_item = CartItems.objects.create(cart=cart, product=product)
 
     if variant:
@@ -103,34 +99,63 @@ def add_to_cart(request, uid):
 
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-from django.http import HttpResponseRedirect
 
+# Remove-from-cart View
 def remove_cart(request, cart_item_uid):
     try:
         cart_item = CartItems.objects.get(uid=cart_item_uid)
         cart_item.delete()
     except Exception as e:
         print(e)
-    
+
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-
-
+# Cart Page View (with coupon apply/remove and breakdown)
 def cart(request):
     if not request.user.is_authenticated:
         return redirect('login')
 
-    cart = Cart.objects.filter(user=request.user, is_paid=False).first()
-    cart_items = cart.cart_items.all() if cart else []
+    cart_obj = Cart.objects.filter(user=request.user, is_paid=False).first()
+    cart_items = cart_obj.cart_items.all() if cart_obj else []
+
+    # Remove coupon if remove_coupon param is set
+    if request.GET.get('remove_coupon') == 'true' and cart_obj:
+        cart_obj.coupon = None
+        cart_obj.save()
+        messages.success(request, "Coupon removed successfully!")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+    # Apply coupon if POST method (coupon apply form)
+    if request.method == 'POST':
+        coupon_code = request.POST.get('coupon')
+        coupon_obj = Coupon.objects.filter(coupon_code__iexact=coupon_code).first()
+
+        if not coupon_obj:
+            messages.warning(request, "Invalid coupon code!")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        if cart_obj.coupon:
+            messages.warning(request, "Coupon already applied!")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        cart_obj.coupon = coupon_obj
+        cart_obj.save()
+        messages.success(request, "Coupon applied successfully!")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+    # Compute subtotal (without coupon discount)
+    subtotal = sum([item.get_product_price() for item in cart_items])
+    discount = 0
+    if cart_obj and cart_obj.coupon:
+        if subtotal >= cart_obj.coupon.minimum_amount:
+            discount = cart_obj.coupon.discount_price
+    final_total = subtotal - discount
 
     context = {
-        'cart': cart,
+        'cart': cart_obj,
         'cart_items': cart_items,
-        'total_price': cart.get_cart_total() if cart else 0
+        'subtotal': subtotal,
+        'discount': discount,
+        'total_price': final_total,
     }
     return render(request, 'accounts/cart.html', context)
-
-
-
-
-
