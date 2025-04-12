@@ -5,10 +5,9 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from .models import Profile
 import uuid
-from django.core.mail import send_mail
-from django.conf import settings
 
 
+# User Registration View
 def register_page(request):
     if request.method == 'POST':
         first_name = request.POST.get('first_name')
@@ -16,61 +15,69 @@ def register_page(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        # Check if user already exists
         if User.objects.filter(username=email).exists():
             messages.warning(request, "Email already registered!")
-            return HttpResponseRedirect(request.path_info)
+            return redirect('register')
 
-        # Create user
-        user_obj = User.objects.create_user(username=email, email=email, password=password)
-        user_obj.first_name = first_name
-        user_obj.last_name = last_name
-        user_obj.save()
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        # Profile will be auto-created via post_save signal
 
-        # Check if Profile already exists
-        if not Profile.objects.filter(user=user_obj).exists():
-            profile_obj = Profile.objects.create(user=user_obj, email_token=str(uuid.uuid4()))
-            profile_obj.save()
-        
-        messages.success(request, "Account created successfully! Verify your email to login.")
-        return redirect('/accounts/login/')  # Redirect to login after successful registration
+        messages.success(request, "Account created successfully! Please verify your email before logging in.")
+        return redirect('login')
 
     return render(request, 'accounts/register.html')
 
+
+# User Login View
 def login_page(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        user_obj = User.objects.filter(username=email).first()
+        user = User.objects.filter(username=email).first()
 
-        if not user_obj:
+        if not user:
             messages.warning(request, "Account does not exist!")
-            return HttpResponseRedirect(request.path_info)
+            return redirect('login')
 
-        if not getattr(user_obj, 'profile', None) or not user_obj.profile.is_email_verified:
-            messages.warning(request, "Account not verified!")
-            return HttpResponseRedirect(request.path_info)
+        if not hasattr(user, 'profile') or not user.profile.is_email_verified:
+            messages.warning(request, "Please verify your email before logging in.")
+            return redirect('login')
 
-        user_obj = authenticate(request, username=user_obj.username, password=password)
+        user = authenticate(username=email, password=password)
 
-        if user_obj is not None:
-            login(request, user_obj)
-            return HttpResponseRedirect('/')
+        if user:
+            login(request, user)
+            return redirect('/')
         else:
             messages.warning(request, "Invalid credentials")
-            return HttpResponseRedirect(request.path_info)
+            return redirect('login')
 
     return render(request, 'accounts/login.html')
 
+
+# Email Activation View
 def activate_email(request, email_token):
     try:
         profile = Profile.objects.get(email_token=email_token)
         profile.is_email_verified = True
         profile.email_token = None
         profile.save()
-        messages.success(request, "Email verified successfully! You can now login.")
+        messages.success(request, "Email verified! You can now login.")
         return redirect('login')
     except Profile.DoesNotExist:
-        messages.error(request, "Invalid Email Token")
+        messages.error(request, "Invalid or expired activation link.")
         return redirect('register')
+
+
+# Logout View (recommended to add)
+def logout_user(request):
+    logout(request)
+    messages.success(request, "You have been logged out.")
+    return redirect('login')

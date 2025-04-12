@@ -1,10 +1,11 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Category, Product, ProductImage, ColorVariant, SizeVariant
+from .models import Category, Product, ProductImage, ColorVariant, SizeVariant , Coupon
 
 # Register Category model
 admin.site.register(Category)
+admin.site.register(Coupon)  # Assuming Coupon is defined in models.py
 
 # Inline model for product images
 class ProductImageAdmin(admin.StackedInline):
