@@ -1,7 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseRedirect
 from products.models import Product, SizeVariant
-from accounts.models import Cart, CartItems
 
 def get_product(request, slug):
     try:
@@ -43,31 +41,3 @@ def get_product(request, slug):
     except Product.DoesNotExist:
         return redirect('/')
 
-
-# Cart view for logged-in user
-def cart(request):
-    cart = Cart.objects.filter(user=request.user, is_paid=False).first()
-    context = {'cart': cart}
-
-    if request.method == 'POST':
-        pass  # future logic
-
-    return render(request, 'accounts/cart.html', context)
-
-
-# Add-to-cart view
-def add_to_cart(request, uid):
-    variant = request.GET.get('variant')
-    product = get_object_or_404(Product, uid=uid)
-    user = request.user
-
-    cart, _ = Cart.objects.get_or_create(user=user, is_paid=False)
-
-    cart_item = CartItems.objects.create(cart=cart, product=product)
-
-    if variant:
-        size_variant = get_object_or_404(SizeVariant, size_name=variant)
-        cart_item.size_variant = size_variant
-        cart_item.save()
-
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
