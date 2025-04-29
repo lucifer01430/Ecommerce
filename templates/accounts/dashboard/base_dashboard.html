@@ -1,0 +1,33 @@
+{% extends "base/base.html" %}
+{% block start %}
+<div class="container mt-5 pt-5">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      <div class="list-group">
+        <a href="{% url 'dashboard_orders' %}" class="list-group-item {% if request.path == '/accounts/dashboard/orders/' %}active{% endif %}">
+          <i class="fa fa-box mr-2"></i> My Orders
+        </a>
+        <a href="{% url 'dashboard_profile' %}" class="list-group-item {% if request.path == '/accounts/dashboard/profile/' %}active{% endif %}">
+          <i class="fa fa-user mr-2"></i> Edit Profile
+        </a>
+        <a href="{% url 'dashboard_coupons' %}" class="list-group-item {% if request.path == '/accounts/dashboard/coupons/' %}active{% endif %}">
+          <i class="fa fa-gift mr-2"></i> Coupons
+        </a>
+        <a href="{% url 'dashboard_help' %}" class="list-group-item {% if request.path == '/accounts/dashboard/help/' %}active{% endif %}">
+          <i class="fa fa-headset mr-2"></i> Help Center
+        </a>
+        <a href="{% url 'logout' %}" class="list-group-item text-danger">
+          <i class="fa fa-sign-out-alt mr-2"></i> Logout
+        </a>
+      </div>
+    </div>
+
+    <!-- Dynamic Section -->
+    <div class="col-md-9">
+      {% block dashboard_content %}
+      {% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}

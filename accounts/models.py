@@ -7,6 +7,7 @@ import uuid
 from base.emails import send_account_activation_email
 from products.models import Coupon, Product, ColorVariant, SizeVariant
 
+
 class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     is_email_verified = models.BooleanField(default=False)
@@ -18,27 +19,27 @@ class Profile(BaseModel):
 
     @property
     def cart_count(self):
-        from accounts.models import CartItems  # To avoid circular import if needed
+        from accounts.models import CartItems  # To avoid circular import
         return CartItems.objects.filter(cart__is_paid=False, cart__user=self.user).count()
 
+
 class Cart(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts', null=True, blank=True)
+    session_key = models.CharField(max_length=100, null=True, blank=True)  # ✅ Added for anonymous users
     coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     is_paid = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Cart of {self.user.username} | Paid: {self.is_paid}"
+        if self.user:
+            return f"Cart of {self.user.username} | Paid: {self.is_paid}"
+        return f"Session Cart ({self.session_key}) | Paid: {self.is_paid}"
 
     def get_cart_total(self):
         cart_items = self.cart_items.all()
-        total = 0
-        for item in cart_items:
-            total += item.get_product_price()
+        total = sum(item.get_product_price() for item in cart_items)
 
-        # Apply coupon discount if available
-        if self.coupon:
-            if total >= self.coupon.minimum_amount:
-                total -= self.coupon.discount_price
+        if self.coupon and total >= self.coupon.minimum_amount:
+            total -= self.coupon.discount_price
 
         return total
 
@@ -48,31 +49,31 @@ class CartItems(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, related_name='cart_items', null=True, blank=True)
     color_variant = models.ForeignKey(ColorVariant, on_delete=models.SET_NULL, null=True, blank=True)
     size_variant = models.ForeignKey(SizeVariant, on_delete=models.SET_NULL, null=True, blank=True)
-    quantity = models.PositiveIntegerField(default=1)  # ✅ NEW FIELD
+    quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return f"{self.product} in {self.cart}"
+        return f"{self.product} x{self.quantity} in {self.cart}"
 
     def get_product_price(self): 
-        price = []
+        price_components = []
         if self.product:
-            price.append(self.product.price)
+            price_components.append(self.product.price)
         if self.color_variant:
-            price.append(self.color_variant.price)
+            price_components.append(self.color_variant.price)
         if self.size_variant:
-            price.append(self.size_variant.price)
-        return sum(price) * self.quantity  # ✅ Total = unit_price * quantity
+            price_components.append(self.size_variant.price)
+        return sum(price_components) * self.quantity
+
 
 @receiver(post_save, sender=User)
 def send_email_token(sender, instance, created, **kwargs):
-    try:
-        if created:
+    if created:
+        try:
             email_token = str(uuid.uuid4())
             profile, created = Profile.objects.get_or_create(user=instance)
             if created:
                 profile.email_token = email_token
                 profile.save()
                 send_account_activation_email(instance.email, email_token)
-    except Exception as e:
-        print("Error:", e)
-        return False
+        except Exception as e:
+            print("Error sending activation email:", e)

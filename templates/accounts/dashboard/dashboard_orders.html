@@ -1,0 +1,40 @@
+{% extends "accounts/dashboard/base_dashboard.html" %}
+
+{% block dashboard_content %}
+<h4 class="mb-4">My Orders</h4>
+
+{% if orders %}
+<div class="table-responsive">
+  <table class="table table-bordered table-hover">
+    <thead class="thead-light">
+      <tr>
+        <th>Order ID</th>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>{{ order.order_id }}</td>
+        <td>{{ order.created_at|date:"d M Y, h:i A" }}</td>
+        <td>₹{{ order.total_amount }}</td>
+        <td>
+          {% if order.status == "Delivered" %}
+          <span class="badge badge-success">{{ order.status }}</span>
+          {% elif order.status == "Cancelled" %}
+          <span class="badge badge-danger">{{ order.status }}</span>
+          {% else %}
+          <span class="badge badge-warning">{{ order.status }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted">You have not placed any orders yet.</p>
+{% endif %}
+{% endblock %}

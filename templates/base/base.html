@@ -93,26 +93,33 @@
 										class="fa fa-shopping-cart"></i>
 								</a>
 								<span class="badge badge-pill badge-danger notify"
-								style="position: absolute; top: -5px; right: -5px; font-size: 12px; padding: 4px 6px;">
-							  {% if request.user.is_authenticated %}
-								  {{ request.user.profile.cart_count|default_if_none:"0" }}
-							  {% else %}
-								  0
-							  {% endif %}
-						  </span>
-						  
-							
+									style="position: absolute; top: -5px; right: -5px; font-size: 12px; padding: 4px 6px;">
+									{{ cart_count|default:"0" }}
+								</span>
+
+
+
+
 							</div>
 							<div class="widget-header icontext">
-								<a href="#" class="icon icon-sm rounded-circle border"><i class="fa fa-user"></i></a>
+								<a href="{% url 'profile' %}" class="icon icon-sm rounded-circle border"><i class="fa fa-user"></i></a>
 								<div class="text">
+								  {% if request.user.is_authenticated %}
+								  <span class="text-muted">Hello, <strong>{{ request.user.first_name|default:request.user.username }}</strong></span>
+									<div>
+									  <a href="{% url 'profile' %}">My Account</a> |
+									  <a href="{% url 'logout' %}">Logout</a>
+									</div>
+								  {% else %}
 									<span class="text-muted">Welcome!</span>
 									<div>
-										<a href="{% url 'login' %}"">Sign in</a> |  
-								<a href=" {% url 'register' %}"> Register</a>
+									  <a href="{% url 'login' %}">Sign in</a> |
+									  <a href="{% url 'register' %}">Register</a>
 									</div>
+								  {% endif %}
 								</div>
-							</div>
+							  </div>
+							  
 						</div> <!-- widgets-wrap.// -->
 					</div> <!-- col.// -->
 				</div> <!-- row.// -->
@@ -125,65 +132,68 @@
 
 	{% endblock %}
 	<!-- ========== FOOTER ========== -->
-<footer class="section-footer bg-dark text-white">
-    <div class="container py-5">
-        <div class="row">
-            <!-- Brand Info -->
-            <aside class="col-md-3">
-				<img src="https://cdn-icons-png.flaticon.com/128/397/397181.png" class="logo-footer mt-3 h-25">
-                <h6 class="title">About Us</h6>
-                <p>
-                    We are a premium online store offering high-quality fashion & lifestyle products. Customer satisfaction is our top priority.
-                </p>
-            
-            </aside>
+	<footer class="section-footer bg-dark text-white">
+		<div class="container py-5">
+			<div class="row">
+				<!-- Brand Info -->
+				<aside class="col-md-3">
+					<img src="https://cdn-icons-png.flaticon.com/128/397/397181.png" class="logo-footer mt-3 h-25">
+					<h6 class="title">About Us</h6>
+					<p>
+						We are a premium online store offering high-quality fashion & lifestyle products. Customer
+						satisfaction is our top priority.
+					</p>
 
-            <!-- Quick Links -->
-            <aside class="col-md-3">
-                <h6 class="title">Quick Links</h6>
-                <ul class="list-menu">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="#">Delivery Info</a></li>
-                    <li><a href="#">Returns & Refunds</a></li>
-                    <li><a href="#">Terms & Conditions</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                </ul>
-            </aside>
+				</aside>
 
-            <!-- Categories -->
-            <aside class="col-md-3">
-                <h6 class="title">Categories</h6>
-                <ul class="list-menu">
-                    <li><a href="#">Men's Fashion</a></li>
-                    <li><a href="#">Women's Fashion</a></li>
-                    <li><a href="#">Footwear</a></li>
-                    <li><a href="#">Accessories</a></li>
-                </ul>
-            </aside>
+				<!-- Quick Links -->
+				<aside class="col-md-3">
+					<h6 class="title">Quick Links</h6>
+					<ul class="list-menu">
+						<li><a href="/">Home</a></li>
+						<li><a href="#">Delivery Info</a></li>
+						<li><a href="#">Returns & Refunds</a></li>
+						<li><a href="#">Terms & Conditions</a></li>
+						<li><a href="#">Privacy Policy</a></li>
+					</ul>
+				</aside>
 
-            <!-- Contact Info -->
-            <aside class="col-md-3">
-                <h6 class="title">Contact</h6>
-                <p>
-                    <i class="fa fa-map-marker-alt mr-2"></i> 123 Street, City, India<br>
-                    <i class="fa fa-phone mr-2"></i> +91-9876543210<br>
-                    <i class="fa fa-envelope mr-2"></i> support@yourstore.com
-                </p>
-                <div class="mt-2">
-                    <a class="btn btn-facebook btn-sm rounded-circle mr-1" href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a class="btn btn-instagram btn-sm rounded-circle mr-1" href="#"><i class="fab fa-instagram"></i></a>
-                    <a class="btn btn-twitter btn-sm rounded-circle" href="#"><i class="fab fa-twitter"></i></a>
-                </div>
-            </aside>
-        </div>
-    </div>
+				<!-- Categories -->
+				<aside class="col-md-3">
+					<h6 class="title">Categories</h6>
+					<ul class="list-menu">
+						<li><a href="#">Men's Fashion</a></li>
+						<li><a href="#">Women's Fashion</a></li>
+						<li><a href="#">Footwear</a></li>
+						<li><a href="#">Accessories</a></li>
+					</ul>
+				</aside>
 
-    <div class="footer-bottom bg-black text-center py-3">
-        <div class="container">
-            <p class="mb-0 text-muted">&copy; 2025 YourStore. All rights reserved.</p>
-        </div>
-    </div>
-</footer>
+				<!-- Contact Info -->
+				<aside class="col-md-3">
+					<h6 class="title">Contact</h6>
+					<p>
+						<i class="fa fa-map-marker-alt mr-2"></i> 123 Street, City, India<br>
+						<i class="fa fa-phone mr-2"></i> +91-9876543210<br>
+						<i class="fa fa-envelope mr-2"></i> support@yourstore.com
+					</p>
+					<div class="mt-2">
+						<a class="btn btn-facebook btn-sm rounded-circle mr-1" href="#"><i
+								class="fab fa-facebook-f"></i></a>
+						<a class="btn btn-instagram btn-sm rounded-circle mr-1" href="#"><i
+								class="fab fa-instagram"></i></a>
+						<a class="btn btn-twitter btn-sm rounded-circle" href="#"><i class="fab fa-twitter"></i></a>
+					</div>
+				</aside>
+			</div>
+		</div>
+
+		<div class="footer-bottom bg-black text-center py-3">
+			<div class="container">
+				<p class="mb-0 text-muted">&copy; 2025 YourStore. All rights reserved.</p>
+			</div>
+		</div>
+	</footer>
 
 </body>
 

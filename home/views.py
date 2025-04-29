@@ -9,3 +9,7 @@ def index(request):
         'products': Product.objects.all()[:8],  # Fetch only the first 8 products
     }
     return render(request, 'home/index.html', context)
+
+
+def home(request):
+    return render(request, 'home/index.html')

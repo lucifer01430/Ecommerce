@@ -1,0 +1,77 @@
+{% extends "base/base.html" %}
+
+{% block start %}
+<section class="section-content padding-y">
+  <div class="container">
+    <h2 class="mb-4">My Profile</h2>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card p-4">
+          <h5>User Info</h5>
+          <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+          <p><strong>Email:</strong> {{ user.email }}</p>
+          <p><strong>Username:</strong> {{ user.username }}</p>
+        </div>
+
+        <div class="card p-4 mt-3">
+          <h5>Profile Image</h5>
+          {% if profile.profile_image %}
+            <img src="{{ profile.profile_image.url }}" alt="Profile" width="100" class="rounded-circle">
+          {% else %}
+            <p class="text-muted">No profile image uploaded.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card p-4 mt-4">
+        <h5>My Orders</h5>
+      
+        {% if orders %}
+        <div class="table-responsive mt-3">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              <tr>
+                <td>{{ order.order_id }}</td>
+                <td>{{ order.created_at|date:"d M Y, h:i A" }}</td>
+                <td>₹{{ order.total_amount }}</td>
+                <td>
+                  {% if order.status == "Delivered" %}
+                  <span class="badge badge-success">{{ order.status }}</span>
+                  {% elif order.status == "Cancelled" %}
+                  <span class="badge badge-danger">{{ order.status }}</span>
+                  {% else %}
+                  <span class="badge badge-warning">{{ order.status }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted mt-3">You have not placed any orders yet.</p>
+        {% endif %}
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card p-4">
+          <h5>Actions</h5>
+          <a href="{% url 'cart' %}" class="btn btn-outline-primary mb-2">View Cart</a>
+          <a href="{% url 'checkout' %}" class="btn btn-outline-success mb-2">Proceed to Checkout</a>
+          <a href="{% url 'logout' %}" class="btn btn-outline-danger">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

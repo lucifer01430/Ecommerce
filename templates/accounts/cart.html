@@ -133,6 +133,12 @@
             </p>
           </div>
         </div>
+        <hr>
+<a href="{% if request.user.is_authenticated %}{% url 'checkout' %}{% else %}{% url 'login' %}?next={% url 'checkout' %}{% endif %}"
+   class="btn btn-success btn-block">
+   Proceed to Checkout
+</a>
+
       </aside>
 
     </div>

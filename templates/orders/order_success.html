@@ -1,0 +1,24 @@
+{% extends "base/base.html" %}
+
+{% block start %}
+<section class="section-content padding-y">
+  <div class="container text-center mt-5 pt-5">
+    <div class="card p-5">
+      <h2 class="text-success mb-4">Thank you for your order!</h2>
+      <p class="lead">Your order has been placed successfully.</p>
+
+      {% if order %}
+      <div class="mt-4">
+        <h5>Order ID:</h5>
+        <p><strong>{{ order.order_id }}</strong></p>
+
+        <h5>Order Total:</h5>
+        <p><strong>₹{{ order.total_amount }}</strong></p>
+
+        <a href="{% url 'profile' %}" class="btn btn-primary mt-4">Go to My Orders</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
