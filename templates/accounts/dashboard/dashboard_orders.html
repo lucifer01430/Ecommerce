@@ -1,40 +1,69 @@
 {% extends "accounts/dashboard/base_dashboard.html" %}
-
 {% block dashboard_content %}
+
 <h4 class="mb-4">My Orders</h4>
 
 {% if orders %}
-<div class="table-responsive">
-  <table class="table table-bordered table-hover">
-    <thead class="thead-light">
-      <tr>
-        <th>Order ID</th>
-        <th>Date</th>
-        <th>Amount</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
+<div class="row">
+  <div class="col-md-12">
+    <div class="card shadow-sm p-4">
       {% for order in orders %}
-      <tr>
-        <td>{{ order.order_id }}</td>
-        <td>{{ order.created_at|date:"d M Y, h:i A" }}</td>
-        <td>₹{{ order.total_amount }}</td>
-        <td>
-          {% if order.status == "Delivered" %}
-          <span class="badge badge-success">{{ order.status }}</span>
-          {% elif order.status == "Cancelled" %}
-          <span class="badge badge-danger">{{ order.status }}</span>
-          {% else %}
-          <span class="badge badge-warning">{{ order.status }}</span>
-          {% endif %}
-        </td>
-      </tr>
+      <div class="mb-5 pb-4 border-bottom">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+          <div>
+            <p class="mb-1"><strong>Order ID:</strong> {{ order.short_order_id }}</p>
+            <p class="mb-1"><strong>Date:</strong> {{ order.created_at|date:"d M Y, h:i A" }}</p>
+            <p class="mb-1"><strong>Status:</strong> 
+              {% if order.status == "Delivered" %}
+                <span class="badge badge-success">Delivered</span>
+              {% elif order.status == "Cancelled" %}
+                <span class="badge badge-danger">Cancelled</span>
+              {% elif order.status == "Shipped" %}
+                <span class="badge badge-primary">Shipped</span>
+              {% else %}
+                <span class="badge badge-warning">{{ order.status }}</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          {% for item in order.order_items.all %}
+          <div class="col-12 d-flex mb-3 align-items-center">
+            <img src="{{ item.product.product_images.first.image.url }}" alt="{{ item.product.product_name }}" class="img-fluid rounded mr-3" style="width: 90px; height: 90px; object-fit: cover;">
+            <div class="flex-grow-1">
+              <a href="{% url 'get_product' item.product.slug %}" class="text-dark font-weight-bold d-block mb-1">{{ item.product.product_name }}</a>
+              <p class="text-muted small mb-0">Qty: {{ item.quantity }}</p>
+              <p class="text-muted small mb-0">₹{{ item.get_product_price }}</p>
+              <p class="text-muted small mb-0">Item ID: {{ order.short_order_id }}-P{{ forloop.counter }}</p>
+            </div>
+            {% if order.status == "Delivered" %}
+            <div class="d-flex flex-wrap gap-2">
+              <a href="{% url 'download_invoice' order.uid %}?item_id={{ item.id }}" class="btn btn-outline-dark btn-sm mr-2">
+                <i class="fa fa-download mr-1"></i> Invoice
+              </a>
+              <a href="{% url 'preview_invoice' order.uid %}?item_id={{ item.id }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                <i class="fa fa-eye mr-1"></i> Preview
+              </a>
+            </div>
+            {% else %}
+            <span class="badge badge-secondary">Invoice available after delivery</span>
+            {% endif %}
+            
+          
+          </div>
+          {% empty %}
+          <div class="col-12">
+            <p class="text-muted">No items in this order.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  </div>
 </div>
 {% else %}
-<p class="text-muted">You have not placed any orders yet.</p>
+<p class="text-muted">You haven’t placed any orders yet.</p>
 {% endif %}
+
 {% endblock %}

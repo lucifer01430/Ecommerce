@@ -1,0 +1,78 @@
+{% extends "accounts/dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block dashboard_content %}
+<div class="row">
+  <!-- Profile Info -->
+  <div class="col-md-6 mb-4">
+    <div class="card shadow-sm p-4 rounded h-100">
+      <div class="d-flex align-items-center mb-3">
+        <i class="fa fa-user-circle text-dark fa-lg mr-2"></i>
+        <h5 class="mb-0">Profile Info</h5>
+      </div>
+      <div class="text-center mb-3">
+        {% if profile.profile_image %}
+          <img src="{{ profile.profile_image.url }}" alt="Profile Photo" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
+        {% else %}
+          <img src="{% static 'images/avatars/default-profile.svg' %}" alt="Default Profile" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
+        {% endif %}
+      </div>
+      <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p><strong>Mobile:</strong> {{ profile.phone|default:"Not added" }}</p>
+      <p><strong>Username:</strong> {{ user.username }}</p>
+    </div>
+  </div>
+
+  <!-- Default Address -->
+  <div class="col-md-6 mb-4">
+    <div class="card shadow-sm p-4 rounded h-100">
+      <div class="d-flex align-items-center mb-3">
+        <i class="fa fa-home text-dark fa-lg mr-2"></i>
+        <h5 class="mb-0">Default Address</h5>
+      </div>
+      {% if profile.address %}
+        <p>{{ profile.address }}</p>
+        <p>{{ profile.city }}, {{ profile.state }} - {{ profile.zip_code }}</p>
+        <p><strong>Phone:</strong> {{ profile.phone|default:"Not added" }}</p>
+      {% else %}
+        <p class="text-muted mb-0">No address saved yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Recent Order -->
+<div class="card shadow-sm p-4 mb-4 rounded">
+  <div class="d-flex align-items-center mb-3">
+    <i class="fa fa-shopping-cart text-primary fa-lg mr-2"></i>
+    <h5 class="mb-0">Recent Order</h5>
+  </div>
+
+  {% with recent_order=user.order_set.last %}
+    {% if recent_order %}
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Order ID:</strong> {{ recent_order.order_id }}</p>
+          <p><strong>Total:</strong> ₹{{ recent_order.total_amount }}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Status:</strong>
+            {% if recent_order.status == "Delivered" %}
+              <span class="badge badge-success">{{ recent_order.status }}</span>
+            {% elif recent_order.status == "Cancelled" %}
+              <span class="badge badge-danger">{{ recent_order.status }}</span>
+            {% else %}
+              <span class="badge badge-warning">{{ recent_order.status }}</span>
+            {% endif %}
+          </p>
+          <p><strong>Date:</strong> {{ recent_order.created_at|date:"d M Y, h:i A" }}</p>
+        </div>
+      </div>
+      <a href="{% url 'dashboard_orders' %}" class="btn btn-outline-primary mt-3 w-100">View All Orders</a>
+    {% else %}
+      <p class="text-muted">You haven’t placed any orders yet.</p>
+    {% endif %}
+  {% endwith %}
+</div>
+{% endblock %}

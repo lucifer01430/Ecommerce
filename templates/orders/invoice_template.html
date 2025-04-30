@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+     body {
+      font-family: Arial, sans-serif;
+      font-size: 14px!important;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      margin-top: 140px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        width: 100%;
+        padding: 10px;
+      }
+
+      .details {
+        flex-direction: column;
+      }
+
+      .details div {
+        width: 100% !important;
+        margin-bottom: 10px;
+      }
+
+      table, th, td {
+        font-size: 11px;
+      }
+    }
+    @page { size: A4; margin: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      color: #333;
+    }
+    .container { width: 100%; padding: 10px; }
+    .header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      border-bottom: 1px solid #ccc; margin-bottom: 10px;
+    }
+    .logo img { width: 80px; }
+    .company-info { text-align: right; font-size: 14px; margin-top: 16px;}
+    .title {
+      text-align: center;
+      font-size: 29px;
+      font-weight: bold;
+      margin: 18px 0;
+      color: #1a3e8d;
+    }
+    .info-block {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .info-box {
+      width: 47%;
+      font-size: 13px;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 3px;
+      gap: 5px!important;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 5px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #1a3e8d;
+      color: white;
+      font-size: 13px;
+    }
+    td.right { text-align: right; }
+    .totals {
+      margin-top: 10px;
+      text-align: right;
+      font-weight: bold;
+    }
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      margin-top: 30px;
+      color: #555;
+      border-top: 1px solid #ddd;
+      padding-top: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <img src="https://cdn-icons-png.flaticon.com/128/397/397181.png" alt="Logo">
+      </div>
+      <div class="company-info">
+        <strong>Harsh Retail Pvt. Ltd.</strong><br>
+        Warehouse A, Sector 18, Noida, UP - 201301<br>
+        support@harsh.in | +91-9876543210
+      </div>
+    </div>
+
+    <!-- Title -->
+    <div class="title">Tax Invoice</div>
+
+    <!-- Billing + Order Info -->
+    <div class="info-block">
+      <div class="info-box">
+        <strong>Billed To</strong><br>
+        {{ order.first_name }} {{ order.last_name }}<br>
+        {{ order.address }}, {{ order.city }}, {{ order.state }} - {{ order.zip_code }}<br>
+        Phone: {{ order.phone }}<br>
+        Email: {{ order.email }}
+      </div>
+      <div class="info-box">
+        <strong>Invoice Details</strong><br>
+        Invoice No: {{ order.short_order_id }}<br>
+        Order ID: {{ order.order_id }}<br>
+        Order Date: {{ order.created_at|date:"d-m-Y" }}<br>
+        Invoice Date: {{ invoice_date|date:"d-m-Y" }}
+      </div>
+    </div>
+
+    <!-- Table -->
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Unit Price (INR)</th>
+          <th>Total (INR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if item %}
+        <tr>
+          <td>
+            {{ item.product.product_name }}<br>
+            {% if item.size_variant %}Size: {{ item.size_variant.size_name }}<br>{% endif %}
+            {% if item.color_variant %}Color: {{ item.color_variant.color_name }}{% endif %}
+          </td>
+          <td class="right">{{ item.quantity }}</td>
+          <td class="right">{{ item.unit_price|floatformat:2 }}</td>
+          <td class="right">{{ item.total_price|floatformat:2 }}</td>
+        </tr>
+        {% else %}
+          {% for i in order_items %}
+          <tr>
+            <td>
+              {{ i.product.product_name }}<br>
+              {% if i.size_variant %}Size: {{ i.size_variant.size_name }}<br>{% endif %}
+              {% if i.color_variant %}Color: {{ i.color_variant.color_name }}{% endif %}
+            </td>
+            <td class="right">{{ i.quantity }}</td>
+            <td class="right">{{ i.unit_price|floatformat:2 }}</td>
+            <td class="right">{{ i.total_price|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        {% endif %}
+        <tr>
+          <td colspan="3" class="right"><strong>Shipping</strong></td>
+          <td class="right">{{ shipping_total|floatformat:2 }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Grand Total -->
+    <div class="totals">
+      Grand Total: INR {{ total_amount|floatformat:2 }}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      This is a system-generated invoice. No signature required.<br>
+      Please retain this invoice and original packaging for warranty/service.<br>
+      Visit <a href="#">HarshPandey.in</a> | Email: support@aviyaan.in
+    </div>
+  </div>
+</body>
+</html>
